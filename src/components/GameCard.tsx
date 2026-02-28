@@ -19,20 +19,20 @@ const GameCard = ({ game, index, onClick }: GameCardProps) => (
     className="group text-left bg-card rounded-lg border border-border overflow-hidden transition-shadow duration-300 card-glow focus:outline-none focus:ring-2 focus:ring-primary/50"
   >
     <div className="aspect-video bg-muted relative overflow-hidden">
-      <img
-        src={game.thumbnail}
-        alt={game.title}
-        loading="lazy"
-        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-        onError={(e) => {
-          (e.target as HTMLImageElement).style.display = "none";
-        }}
-      />
       <div className="absolute inset-0 flex items-center justify-center bg-muted">
         <span className="text-3xl font-bold font-display text-muted-foreground/30">
           {game.title.charAt(0)}
         </span>
       </div>
+      <img
+        src={game.thumbnail}
+        alt={game.title}
+        loading="lazy"
+        className="relative z-10 w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+        onError={(e) => {
+          (e.target as HTMLImageElement).style.display = "none";
+        }}
+      />
     </div>
     <div className="p-3">
       <div className="flex items-center justify-between mb-1">
