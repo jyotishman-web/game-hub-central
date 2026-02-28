@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>simple tic‑tac‑toe</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    }
+    body {
+      min-height: 100vh;
+      margin: 0;
+      background: linear-gradient(145deg, #f0f3fa 0%, #e6e9f2 100%);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .game-container {
+      background: rgba(255,255,255,0.5);
+      backdrop-filter: blur(4px);
+      border-radius: 2.5rem;
+      padding: 2rem 2rem 2.5rem;
+      box-shadow: 0 25px 40px -10px rgba(0,20,30,0.3),
+                  inset 0 -2px 5px rgba(255,255,255,0.7);
+      border: 1px solid rgba(255,255,255,0.6);
+      width: min(95vw, 480px);
+    }
+    h1 {
+      text-align: center;
+      font-weight: 500;
+      font-size: 2.4rem;
+      letter-spacing: 2px;
+      margin: 0 0 0.5rem 0;
+      color: #1a2639;
+      text-shadow: 3px 3px 0 #cbd5e1;
+    }
+    .status-area {
+      background: #2d3b4f;
+      color: #f0f4fa;
+      padding: 0.9rem 1rem;
+      border-radius: 60px;
+      text-align: center;
+      font-size: 1.5rem;
+      font-weight: 500;
+      margin-bottom: 2rem;
+      box-shadow: inset 0 -3px 0 #0f172a, 0 8px 0 #0f172a;
+      border: 1px solid #94a3b8;
+      letter-spacing: 0.5px;
+    }
+    .board {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+      background: transparent;
+      margin-bottom: 2.2rem;
+    }
+    .cell {
+      aspect-ratio: 1 / 1;
+      background: #f9fbfd;
+      border: none;
+      border-radius: 28px;
+      box-shadow: 0 10px 0 #7f8c9f, 0 5px 20px rgba(0,0,0,0.2);
+      font-size: min(7vw, 5rem);
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #1e2b3c;
+      transition: all 0.08s ease;
+      cursor: pointer;
+      user-select: none;
+      padding: 0;
+      line-height: 1;
+    }
+    .cell:active:not(.disabled-cell) {
+      transform: translateY(6px);
+      box-shadow: 0 4px 0 #5f6b7c, 0 8px 15px rgba(0,0,0,0.15);
+    }
+    .cell.X-move {
+      color: #c44536;
+      text-shadow: 2px 2px 0 #ffb8b8;
+    }
+    .cell.O-move {
+      color: #2c5f7b;
+      text-shadow: 2px 2px 0 #b0d4f0;
+    }
+    .disabled-cell {
+      cursor: default;
+      box-shadow: 0 5px 0 #6b7a8f, 0 5px 15px rgba(0,0,0,0.1);
+      transform: translateY(5px);
+      filter: brightness(0.98);
+      pointer-events: none;
+    }
+    .win-glow {
+      background: #fbf3d5;
+      box-shadow: 0 0 0 4px #f7d44b, 0 10px 0 #8b7a4b, 0 5px 20px black;
+      color: #1f2a3f;
+    }
+    .button-bar {
+      display: flex;
+      justify-content: center;
+    }
+    .reset-btn {
+      background: #facc15;
+      border: none;
+      font-size: 1.8rem;
+      font-weight: 550;
+      padding: 0.8rem 2.8rem;
+      border-radius: 60px;
+      color: #0f172a;
+      letter-spacing: 1.5px;
+      box-shadow: 0 9px 0 #b7811a, 0 5px 15px #00000030;
+      transition: 0.07s linear;
+      cursor: pointer;
+      border: 1px solid #fde047;
+      width: fit-content;
+    }
+    .reset-btn:active {
+      transform: translateY(6px);
+      box-shadow: 0 3px 0 #9e6516, 0 5px 12px #00000030;
+    }
+    .reset-btn:hover {
+      background: #fbbf24;
+    }
+    .footer-note {
+      text-align: center;
+      margin-top: 1rem;
+      color: #334155;
+      font-size: 1.1rem;
+      font-weight: 400;
+      opacity: 0.9;
+    }
+  </style>
+</head>
+<body>
+<div class="game-container">
+  <h1>⭕ TIC ❌ TAC ❕</h1>
+
+  <!-- current turn / winner message -->
+  <div class="status-area" id="statusMessage">Player X's turn</div>
+
+  <!-- game grid -->
+  <div class="board" id="board">
+    <!-- 9 cells will be generated in JS, but we can also write static ones for clarity -->
+    <!-- but we create them dynamically to keep html clean -->
+  </div>
+
+  <!-- reset button -->
+  <div class="button-bar">
+    <button class="reset-btn" id="resetGame">↻ RESTART</button>
+  </div>
+  <div class="footer-note">X always starts</div>
+</div>
+
+<script>
+  (function() {
+    // ---------- Game state ----------
+    let board = [
+      ['', '', ''],
+      ['', '', ''],
+      ['', '', '']
+    ];
+    let currentPlayer = 'X';        // X always starts
+    let gameWinner = null;           // 'X', 'O', 'tie' or null
+    let gameActive = true;
+
+    // DOM elements
+    const boardEl = document.getElementById('board');
+    const statusEl = document.getElementById('statusMessage');
+    const resetBtn = document.getElementById('resetGame');
+
+    // We'll store cell references in a 2D array for easy update
+    const cellElements = [];
+
+    // ---------- Helper: render board from state, apply win highlights ----------
+    function renderBoard() {
+      // update each cell text and classes
+      for (let r = 0; r < 3; r++) {
+        for (let c = 0; c < 3; c++) {
+          const cell = cellElements[r][c];
+          const mark = board[r][c];
+          cell.textContent = mark;
+
+          // remove extra classes
+          cell.classList.remove('X-move', 'O-move', 'win-glow', 'disabled-cell');
+
+          if (mark === 'X') {
+            cell.classList.add('X-move');
+          } else if (mark === 'O') {
+            cell.classList.add('O-move');
+          }
+
+          // if game has winner (and not tie) and this cell is part of win line → glow
+          if (gameWinner && gameWinner !== 'tie') {
+            const winCombo = getWinCombination(); // only valid when winner exists
+            if (winCombo) {
+              const isWinningCell = winCombo.some(([wr, wc]) => wr === r && wc === c);
+              if (isWinningCell) {
+                cell.classList.add('win-glow');
+              }
+            }
+          }
+
+          // disable cell if game inactive OR cell already filled
+          if (!gameActive || mark !== '' || gameWinner) {
+            cell.classList.add('disabled-cell');
+          } else {
+            // active and empty → clickable (remove disabled class)
+            cell.classList.remove('disabled-cell');
+          }
+        }
+      }
+    }
+
+    // ---------- Check win combination and return array of coordinates or null ----------
+    function getWinCombination() {
+      if (!gameWinner || gameWinner === 'tie') return null;
+
+      const lines = [
+        // rows
+        [[0,0],[0,1],[0,2]],
+        [[1,0],[1,1],[1,2]],
+        [[2,0],[2,1],[2,2]],
+        // cols
+        [[0,0],[1,0],[2,0]],
+        [[0,1],[1,1],[2,1]],
+        [[0,2],[1,2],[2,2]],
+        // diagonals
+        [[0,0],[1,1],[2,2]],
+        [[0,2],[1,1],[2,0]]
+      ];
+
+      for (let line of lines) {
+        const [a, b, c] = line;
+        const valA = board[a[0]][a[1]];
+        const valB = board[b[0]][b[1]];
+        const valC = board[c[0]][c[1]];
+        if (valA && valA === valB && valB === valC) {
+          return line; // winning cells coordinates
+        }
+      }
+      return null; // should not happen if winner exists, but safety
+    }
+
+    // ---------- Evaluate winner from current board ----------
+    function computeWinner() {
+      const lines = [
+        // rows
+        [[0,0],[0,1],[0,2]],
+        [[1,0],[1,1],[1,2]],
+        [[2,0],[2,1],[2,2]],
+        // cols
+        [[0,0],[1,0],[2,0]],
+        [[0,1],[1,1],[2,1]],
+        [[0,2],[1,2],[2,2]],
+        // diagonals
+        [[0,0],[1,1],[2,2]],
+        [[0,2],[1,1],[2,0]]
+      ];
+
+      for (let line of lines) {
+        const [a, b, c] = line;
+        if (board[a[0]][a[1]] && board[a[0]][a[1]] === board[b[0]][b[1]] && board[b[0]][b[1]] === board[c[0]][c[1]]) {
+          return board[a[0]][a[1]];   // 'X' or 'O'
+        }
+      }
+
+      // check for tie (no empty cells)
+      if (board.every(row => row.every(cell => cell !== ''))) {
+        return 'tie';
+      }
+
+      return null; // no winner yet
+    }
+
+    // ---------- Update status message based on gameWinner and currentPlayer ----------
+    function updateStatus() {
+      if (gameWinner === 'X') {
+        statusEl.textContent = '🏆 X wins! 🏆';
+      } else if (gameWinner === 'O') {
+        statusEl.textContent = '🏆 O wins! 🏆';
+      } else if (gameWinner === 'tie') {
+        statusEl.textContent = '🤝 It\'s a tie! 🤝';
+      } else {
+        // game active
+        statusEl.textContent = `Player ${currentPlayer}'s turn`;
+      }
+    }
+
+    // ---------- Handle cell click ----------
+    function handleCellClick(row, col) {
+      // ignore if game inactive, cell not empty, or winner exists
+      if (!gameActive || gameWinner || board[row][col] !== '') return;
+
+      // place mark
+      board[row][col] = currentPlayer;
+
+      // check for win / tie after move
+      const winner = computeWinner();
+      gameWinner = winner;
+
+      if (winner) {
+        gameActive = false;   // game ends (winner or tie)
+      } else {
+        // switch player
+        currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+      }
+
+      // re-render board with new state and win highlights
+      renderBoard();
+      updateStatus();
+    }
+
+    // ---------- Reset everything ----------
+    function resetGame() {
+      // clear board array
+      board = [
+        ['', '', ''],
+        ['', '', ''],
+        ['', '', '']
+      ];
+      currentPlayer = 'X';
+      gameWinner = null;
+      gameActive = true;
+
+      // re-render
+      renderBoard();
+      updateStatus();
+    }
+
+    // ---------- Build board UI dynamically and attach listeners ----------
+    function initializeBoard() {
+      boardEl.innerHTML = '';  // clear any existing
+      // clear cellElements array
+      cellElements.length = 0;
+
+      for (let r = 0; r < 3; r++) {
+        const rowCells = [];
+        for (let c = 0; c < 3; c++) {
+          const cell = document.createElement('button');
+          cell.className = 'cell';
+          cell.setAttribute('data-row', r);
+          cell.setAttribute('data-col', c);
+
+          // add click listener (closure to capture r,c)
+          cell.addEventListener('click', (function(row, col) {
+            return function() {
+              handleCellClick(row, col);
+            };
+          })(r, c));
+
+          boardEl.appendChild(cell);
+          rowCells.push(cell);
+        }
+        cellElements.push(rowCells);
+      }
+
+      // initial render
+      renderBoard();
+      updateStatus();
+    }
+
+    // attach reset listener
+    resetBtn.addEventListener('click', resetGame);
+
+    // start everything
+    initializeBoard();
+  })();
+</script>
+</body>
+</html>
