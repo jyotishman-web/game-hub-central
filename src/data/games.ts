@@ -21,10 +21,10 @@ export const games: Game[] = [
     id: "space-shooter",
     title: "Space Shooter",
     category: "Action",
-    thumbnail: "/games /space-shooter/thumb.png",
+    thumbnail: "/games/space-shooter/thumb.png",
     description: "Blast through waves of alien invaders in this classic space shooter. Collect power-ups and survive as long as you can!",
     howToPlay: "Use arrow keys or WASD to move your ship. Press Space to shoot. Collect power-ups for special abilities.",
-    gameFile: "/games /space-shooter/index.html",
+    gameFile: "/games/space-shooter/index.html",
   },
   {
     id: "puzzle-blocks",
