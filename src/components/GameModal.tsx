@@ -26,20 +26,20 @@ const GameModal = ({ game, onClose }: GameModalProps) => (
           className="bg-card border border-border rounded-xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl"
         >
           {/* Thumbnail */}
-          <div className="aspect-video bg-muted relative">
-            <img
-              src={game.thumbnail}
-              alt={game.title}
-              className="w-full h-full object-cover"
-              onError={(e) => {
-                (e.target as HTMLImageElement).style.display = "none";
-              }}
-            />
-            <div className="absolute inset-0 flex items-center justify-center bg-muted -z-0">
+          <div className="aspect-video bg-muted relative overflow-hidden">
+            <div className="absolute inset-0 flex items-center justify-center bg-muted">
               <span className="text-6xl font-bold font-display text-muted-foreground/20">
                 {game.title.charAt(0)}
               </span>
             </div>
+            <img
+              src={game.thumbnail}
+              alt={game.title}
+              className="relative z-10 w-full h-full object-cover"
+              onError={(e) => {
+                (e.target as HTMLImageElement).style.display = "none";
+              }}
+            />
             <button
               onClick={onClose}
               className="absolute top-3 right-3 p-1.5 rounded-full bg-background/70 backdrop-blur-sm text-foreground hover:bg-background transition-colors"
