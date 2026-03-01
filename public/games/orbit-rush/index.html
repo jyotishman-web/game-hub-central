@@ -735,6 +735,26 @@ function loop() {
 init();
 
 </script>
+    <!-- Reward / Game Over Popup -->
+<div id="rewardPopup" style="display:none; position:fixed; top:40%; left:50%;
+    transform:translate(-50%,-50%); background:#111; color:#fff;
+    padding:20px; border-radius:12px; text-align:center; z-index:1000; width:300px;">
+
+  <h2>Game Over!</h2>
+
+  <button id="reviveBtn" style="padding:10px 20px; margin:10px; border-radius:8px; background:#00ccff; color:#fff; border:none;">
+    🎥 Revive by Watching Ad
+  </button>
+
+  <button id="restartBtn" style="padding:10px 20px; margin:10px; border-radius:8px; background:#555; color:#fff; border:none;">
+    🔁 Restart Without Ad
+  </button>
+
+  <button id="bonusBtn" style="padding:10px 20px; margin:10px; border-radius:8px; background:#ff9900; color:#fff; border:none;">
+    🎁 Bonus (Watch Ad)
+  </button>
+
+</div>
 </body>
 </html>
 
