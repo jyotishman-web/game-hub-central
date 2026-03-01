@@ -42,7 +42,7 @@ const GameModal = ({ game, onClose }: GameModalProps) => (
             />
             <button
               onClick={onClose}
-              className="absolute top-3 right-3 p-1.5 rounded-full bg-background/70 backdrop-blur-sm text-foreground hover:bg-background transition-colors"
+              className="absolute top-3 right-3 z-20 p-1.5 rounded-full bg-background/70 backdrop-blur-sm text-foreground hover:bg-background transition-colors"
             >
               <X className="w-4 h-4" />
             </button>
