@@ -755,6 +755,61 @@ init();
   </button>
 
 </div>
+    <script>
+// Replace with your ad link (PropellerAds / AdinPlay)
+const adLink = "https://propellerlink.com/abc123"; 
+
+// Show popup when game is over
+function gameOver() {
+    document.getElementById("rewardPopup").style.display = "block";
+}
+
+// Hide popup
+function hidePopup() {
+    document.getElementById("rewardPopup").style.display = "none";
+}
+
+// Simulate watching ad safely
+function watchAd(callback) {
+    window.open(adLink, "_blank"); // Open ad in new tab
+    setTimeout(() => {
+        callback(); // Give reward after 3 seconds
+    }, 3000);
+}
+
+// Button actions
+document.getElementById("reviveBtn").onclick = function() {
+    watchAd(() => {
+        hidePopup();
+        revivePlayer();
+    });
+}
+
+document.getElementById("restartBtn").onclick = function() {
+    hidePopup();
+    restartGame();
+}
+
+document.getElementById("bonusBtn").onclick = function() {
+    watchAd(() => {
+        hidePopup();
+        unlockBonus();
+    });
+}
+
+// Example dummy functions — replace with your actual game logic
+function revivePlayer() {
+    alert("Player Revived! 🎉"); // Replace with actual revive logic
+}
+
+function restartGame() {
+    alert("Game Restarted 🔁"); // Replace with actual restart logic
+}
+
+function unlockBonus() {
+    alert("Bonus Unlocked! 🎁"); // Replace with your bonus system
+}
+    </script>
 </body>
 </html>
 
