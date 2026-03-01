@@ -27,13 +27,13 @@ export const games: Game[] = [
     gameFile: "/games/space-shooter/index.html",
   },
   {
-    id: "puzzle-blocks",
-    title: "Puzzle Blocks",
+    id: "orbit-rush",
+    title: "Orbit Rush",
     category: "Puzzle",
-    thumbnail: "/games/puzzle-blocks/thumb.png",
+    thumbnail: "/games/orbit-rush/thumb (2).png",
     description: "Arrange falling blocks to complete rows and score points. How high can you stack?",
     howToPlay: "Use arrow keys to move and rotate blocks. Press Down to speed up. Complete full rows to clear them.",
-    gameFile: "/games/puzzle-blocks/index.html",
+    gameFile: "/games/orbit-rush/index.html",
   },
   {
     id: "racing-fury",
