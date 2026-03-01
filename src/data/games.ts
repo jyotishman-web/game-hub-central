@@ -30,7 +30,7 @@ export const games: Game[] = [
     id: "orbit-rush",
     title: "Orbit Rush",
     category: "Puzzle",
-    thumbnail: "/games/orbit-rush/thumb (2).png",
+    thumbnail: "/games/orbit-rush/my.png",
     description: "Arrange falling blocks to complete rows and score points. How high can you stack?",
     howToPlay: "Use arrow keys to move and rotate blocks. Press Down to speed up. Complete full rows to clear them.",
     gameFile: "/games/orbit-rush/index.html",
