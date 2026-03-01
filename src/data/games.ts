@@ -31,8 +31,8 @@ export const games: Game[] = [
     title: "Orbit Rush",
     category: "Puzzle",
     thumbnail: "/games/orbit-rush/my.png",
-    description: "Arrange falling blocks to complete rows and score points. How high can you stack?",
-    howToPlay: "Use arrow keys to move and rotate blocks. Press Down to speed up. Complete full rows to clear them.",
+    description: "Orbit Rush is a minimalist, high-speed timing game that tests your reflexes and precision.",
+    howToPlay: "​The Goal: Move your glowing orb from one circle to the next to climb higher and score points.​The Control: Tap or Click at the exact moment your orb is aligned with the next circle.​The Challenge: A cyan tether will shoot out; if you miss the target or mistime the jump, your orb flies into the void and the game ends..",
     gameFile: "/games/orbit-rush/index.html",
   },
   {
