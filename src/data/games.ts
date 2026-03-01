@@ -125,6 +125,15 @@ export const games: Game[] = [
     howToPlay: "Type your answer and press Enter. Answer correctly before time runs out to keep your streak.",
     gameFile: "/games/math-challenge/index.html",
   },
+  {
+    id: "number-guesser",
+    title: "Number Guesser",
+    category: "Education",
+    thumbnail: "/games/number-guesser/thumb.png",
+    description: "Solve math math skills!",
+    howToPlay: "Type  before time runs out to keep your streak.",
+    gameFile: "/games/number-guesser/index.html",
+  },
 ];
 
 export const categories = Array.from(new Set(games.map((g) => g.category))).sort();
