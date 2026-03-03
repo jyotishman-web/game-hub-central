@@ -54,13 +54,13 @@ export const games: Game[] = [
     gameFile: "/games/2048/index.html",
   },
   {
-    id: "tower-defense",
+    id: "HexGl",
     title: "Tower Defense",
     category: "Strategy",
     thumbnail: "/games/tower-defense/thumb.png",
     description: "Build and upgrade towers to defend against waves of enemies. Plan your strategy wisely!",
     howToPlay: "Click to place towers along the path. Upgrade towers by clicking them. Earn gold by defeating enemies.",
-    gameFile: "/games/tower-defense/index.html",
+    gameFile: "/games/HexGl/index.html",
   },
   {
     id: "ninja-run",
