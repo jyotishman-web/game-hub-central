@@ -54,13 +54,13 @@ export const games: Game[] = [
     gameFile: "/games/2048/index.html",
   },
   {
-    id: "hexgl",
-    title: "HexGL",
-    category: "Racing",
+    id: "Othello",
+    title: "Othello",
+    category: "Strategy",
     thumbnail: "/games/HexGL/icon_128.png",
     description: "A futuristic racing game built with HTML5 and WebGL. Speed through a neon-lit track at breakneck pace!",
     howToPlay: "Use arrow keys or WASD to steer your ship. Avoid walls to preserve your shield. Hit boost pads for extra speed.",
-    gameFile: "https://hexgl.bkcore.com/",
+    gameFile: "games/Othello/index.html",
   },
   {
     id: "ninja-run",
