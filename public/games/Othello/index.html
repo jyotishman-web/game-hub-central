@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Othello Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --board-bg: #1b4332;
+            --cell-border: #081c15;
+            --accent: #52b788;
+        }
+        body {
+            background-color: #0d1117;
+            color: white;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            touch-action: manipulation;
+            overflow: hidden;
+        }
+        .board {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            grid-template-rows: repeat(8, 1fr);
+            background-color: var(--cell-border);
+            gap: 2px;
+            border: 6px solid var(--cell-border);
+            border-radius: 12px;
+            aspect-ratio: 1 / 1;
+            width: 100%;
+            max-width: 480px;
+            margin: 0 auto;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+        .cell {
+            background-color: var(--board-bg);
+            position: relative;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.3s ease;
+        }
+        .cell:hover {
+            background-color: #2d6a4f;
+        }
+        .piece {
+            width: 82%;
+            height: 82%;
+            border-radius: 50%;
+            transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.3s;
+            transform: scale(0) rotateY(0deg);
+            position: relative;
+            z-index: 10;
+        }
+        /* Flip animation */
+        .piece.flipping {
+            transform: scale(1) rotateY(180deg);
+        }
+        .piece.black {
+            background: radial-gradient(circle at 30% 30%, #444, #000);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.6);
+            transform: scale(1);
+        }
+        .piece.white {
+            background: radial-gradient(circle at 30% 30%, #fff, #bdc3c7);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            transform: scale(1);
+        }
+        .hint {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.15);
+            transition: all 0.2s;
+        }
+        .cell:hover .hint {
+            transform: scale(1.4);
+            background-color: rgba(255, 255, 255, 0.3);
+        }
+        .active-turn {
+            border-color: var(--accent) !important;
+            background-color: rgba(82, 183, 136, 0.1) !important;
+            transform: translateY(-4px);
+        }
+        .ai-thinking-dot {
+            animation: blink 1s infinite;
+        }
+        @keyframes blink { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-md mb-4 text-center">
+        <h1 class="text-4xl font-black tracking-tighter mb-4 bg-clip-text text-transparent bg-gradient-to-r from-green-400 to-emerald-600">
+            OTHELLO PRO
+        </h1>
+        
+        <!-- Controls & Mode -->
+        <div class="flex gap-4 justify-center mb-6">
+            <button id="ai-toggle" onclick="toggleAI()" class="flex items-center gap-2 px-4 py-2 bg-gray-800 rounded-full border border-gray-700 transition-all hover:bg-gray-700">
+                <div id="ai-status-dot" class="w-3 h-3 rounded-full bg-red-500"></div>
+                <span class="text-xs font-bold uppercase tracking-widest">AI Opponent</span>
+            </button>
+            <button onclick="resetGame()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-full text-xs font-bold transition-all shadow-lg uppercase tracking-widest">
+                Reset
+            </button>
+        </div>
+
+        <!-- Scoreboard -->
+        <div class="grid grid-cols-2 gap-4 mb-6">
+            <div id="player-black" class="flex flex-col items-center p-4 rounded-2xl border-2 border-transparent bg-gray-900 transition-all">
+                <div class="w-10 h-10 rounded-full bg-black border-2 border-gray-600 mb-2 shadow-inner"></div>
+                <span class="text-xs font-bold text-gray-500 uppercase">Black</span>
+                <span id="score-black" class="text-3xl font-black">2</span>
+            </div>
+            
+            <div id="player-white" class="flex flex-col items-center p-4 rounded-2xl border-2 border-transparent bg-gray-900 transition-all">
+                <div class="w-10 h-10 rounded-full bg-white border-2 border-gray-300 mb-2"></div>
+                <span class="text-xs font-bold text-gray-500 uppercase" id="white-label">White</span>
+                <span id="score-white" class="text-3xl font-black">2</span>
+            </div>
+        </div>
+
+        <div id="status-msg" class="text-sm font-bold text-emerald-400 h-6 mb-2">Black's Turn</div>
+    </div>
+
+    <!-- The Board -->
+    <div id="board" class="board"></div>
+
+    <!-- Game Over Modal -->
+    <div id="modal" class="fixed inset-0 bg-black/90 hidden flex items-center justify-center z-50 p-6 backdrop-blur-sm">
+        <div class="bg-gray-900 p-10 rounded-3xl text-center max-w-sm w-full border border-gray-800 shadow-2xl scale-in">
+            <h2 class="text-xl font-bold text-gray-400 mb-2 uppercase tracking-widest">Match Result</h2>
+            <div id="winner-text" class="text-5xl font-black text-white mb-8">BLACK WINS</div>
+            <button onclick="resetGame()" class="w-full py-4 bg-emerald-600 hover:bg-emerald-500 rounded-2xl font-black text-lg transition-all transform hover:scale-105 active:scale-95">
+                PLAY AGAIN
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Audio Setup
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playTone(freq, type, duration, vol) {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
+        }
+
+        const sounds = {
+            place: () => playTone(440, 'sine', 0.1, 0.1),
+            flip: (idx) => setTimeout(() => playTone(660 + (idx * 20), 'sine', 0.1, 0.05), idx * 70),
+            win: () => {
+                playTone(523, 'square', 0.3, 0.1);
+                setTimeout(() => playTone(659, 'square', 0.3, 0.1), 150);
+                setTimeout(() => playTone(783, 'square', 0.5, 0.1), 300);
+            }
+        };
+
+        const EMPTY = 0, BLACK = 1, WHITE = 2;
+        let board = [], turn = BLACK, validMoves = [], vsAI = false, isThinking = false;
+
+        function initBoard() {
+            board = Array(8).fill().map(() => Array(8).fill(EMPTY));
+            board[3][3] = WHITE; board[3][4] = BLACK;
+            board[4][3] = BLACK; board[4][4] = WHITE;
+        }
+
+        function createUI() {
+            const boardEl = document.getElementById('board');
+            boardEl.innerHTML = '';
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.dataset.r = r; cell.dataset.c = c;
+                    cell.onclick = () => handleCellClick(r, c);
+                    
+                    const piece = document.createElement('div');
+                    piece.className = 'piece';
+                    cell.appendChild(piece);
+                    
+                    const hint = document.createElement('div');
+                    hint.className = 'hint hidden';
+                    cell.appendChild(hint);
+                    
+                    boardEl.appendChild(cell);
+                }
+            }
+        }
+
+        function toggleAI() {
+            vsAI = !vsAI;
+            document.getElementById('ai-status-dot').className = `w-3 h-3 rounded-full ${vsAI ? 'bg-green-500 shadow-[0_0_10px_#22c55e]' : 'bg-red-500'}`;
+            document.getElementById('white-label').textContent = vsAI ? "AI (White)" : "White";
+            if (vsAI && turn === WHITE) setTimeout(makeAIMove, 600);
+        }
+
+        function updateUI() {
+            const cells = document.getElementById('board').children;
+            let counts = { [BLACK]: 0, [WHITE]: 0 };
+
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    const idx = r * 8 + c;
+                    const cell = cells[idx];
+                    const piece = cell.querySelector('.piece');
+                    const hint = cell.querySelector('.hint');
+                    const val = board[r][c];
+
+                    if (val !== EMPTY) {
+                        const newClass = val === BLACK ? 'piece black' : 'piece white';
+                        if (piece.className !== newClass && piece.className !== 'piece') {
+                            piece.classList.add('flipping');
+                            setTimeout(() => piece.classList.remove('flipping'), 500);
+                        }
+                        piece.className = newClass;
+                        counts[val]++;
+                    } else {
+                        piece.className = 'piece';
+                    }
+
+                    const isMoveValid = !isThinking && validMoves.some(m => m.r === r && m.c === c);
+                    hint.className = isMoveValid ? 'hint' : 'hint hidden';
+                }
+            }
+
+            document.getElementById('score-black').textContent = counts[BLACK];
+            document.getElementById('score-white').textContent = counts[WHITE];
+
+            const pb = document.getElementById('player-black');
+            const pw = document.getElementById('player-white');
+            const sm = document.getElementById('status-msg');
+
+            pb.classList.toggle('active-turn', turn === BLACK);
+            pw.classList.toggle('active-turn', turn === WHITE);
+            
+            if (isThinking) {
+                sm.innerHTML = `AI is thinking<span class="ai-thinking-dot">...</span>`;
+            } else {
+                sm.textContent = turn === BLACK ? "Black's Turn" : (vsAI ? "AI's Turn" : "White's Turn");
+            }
+        }
+
+        function getFlippable(r, c, p, currentBoard = board) {
+            const opp = p === BLACK ? WHITE : BLACK;
+            const dirs = [[-1,-1], [-1,0], [-1,1], [0,-1], [0,1], [1,-1], [1,0], [1,1]];
+            let flips = [];
+            for (const [dr, dc] of dirs) {
+                let temp = [], nr = r + dr, nc = c + dc;
+                while (nr >= 0 && nr < 8 && nc >= 0 && nc < 8 && currentBoard[nr][nc] === opp) {
+                    temp.push({ r: nr, c: nc });
+                    nr += dr; nc += dc;
+                }
+                if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8 && currentBoard[nr][nc] === p) {
+                    flips = flips.concat(temp);
+                }
+            }
+            return flips;
+        }
+
+        function getMoves(p, currentBoard = board) {
+            const moves = [];
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    if (currentBoard[r][c] !== EMPTY) continue;
+                    const flips = getFlippable(r, c, p, currentBoard);
+                    if (flips.length > 0) moves.push({ r, c, flips });
+                }
+            }
+            return moves;
+        }
+
+        function handleCellClick(r, c) {
+            if (isThinking || (vsAI && turn === WHITE)) return;
+            const move = validMoves.find(m => m.r === r && m.c === c);
+            if (!move) return;
+            executeMove(move);
+        }
+
+        function executeMove(move) {
+            sounds.place();
+            board[move.r][move.c] = turn;
+            move.flips.forEach((f, i) => {
+                board[f.r][f.c] = turn;
+                sounds.flip(i);
+            });
+
+            turn = turn === BLACK ? WHITE : BLACK;
+            validMoves = getMoves(turn);
+
+            if (validMoves.length === 0) {
+                turn = turn === BLACK ? WHITE : BLACK;
+                validMoves = getMoves(turn);
+                if (validMoves.length === 0) return endGame();
+            }
+
+            updateUI();
+            if (vsAI && turn === WHITE) setTimeout(makeAIMove, 800);
+        }
+
+        function makeAIMove() {
+            if (validMoves.length === 0) return;
+            isThinking = true;
+            updateUI();
+
+            // Simple Minimax with position weights
+            const weights = [
+                [100, -20, 10,  5,  5, 10, -20, 100],
+                [-20, -50, -2, -2, -2, -2, -50, -20],
+                [ 10,  -2,  5,  1,  1,  5,  -2,  10],
+                [  5,  -2,  1,  0,  0,  1,  -2,   5],
+                [  5,  -2,  1,  0,  0,  1,  -2,   5],
+                [ 10,  -2,  5,  1,  1,  5,  -2,  10],
+                [-20, -50, -2, -2, -2, -2, -50, -20],
+                [100, -20, 10,  5,  5, 10, -20, 100]
+            ];
+
+            setTimeout(() => {
+                let bestMove = validMoves[0];
+                let maxScore = -Infinity;
+
+                validMoves.forEach(m => {
+                    let score = weights[m.r][m.c] + m.flips.length;
+                    if (score > maxScore) {
+                        maxScore = score;
+                        bestMove = m;
+                    }
+                });
+
+                isThinking = false;
+                executeMove(bestMove);
+            }, 1000);
+        }
+
+        function endGame() {
+            updateUI();
+            sounds.win();
+            const b = parseInt(document.getElementById('score-black').textContent);
+            const w = parseInt(document.getElementById('score-white').textContent);
+            const winTxt = document.getElementById('winner-text');
+            if (b > w) winTxt.textContent = "BLACK WINS";
+            else if (w > b) winTxt.textContent = vsAI ? "AI WINS" : "WHITE WINS";
+            else winTxt.textContent = "DRAW";
+            document.getElementById('modal').classList.remove('hidden');
+        }
+
+        function resetGame() {
+            document.getElementById('modal').classList.add('hidden');
+            initBoard();
+            createUI();
+            turn = BLACK;
+            isThinking = false;
+            validMoves = getMoves(turn);
+            updateUI();
+        }
+
+        window.onload = resetGame;
+    </script>
+</body>
+</html>
+
+
