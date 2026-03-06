@@ -102,7 +102,7 @@ export const games: Game[] = [
     id: "flappy-bird",
     title: "Flappy Bird",
     category: "Casual",
-    thumbnail: "/games/flappy-bird/thumb.png",
+    thumbnail: "/games/flappy-bird/l.png",
     description: "Tap to flap through an endless series of pipes. Simple but insanely addictive!",
     howToPlay: "Tap the screen or press Space to flap. Navigate through the gaps between pipes. One hit and it's game over!",
     gameFile: "/games/flappy-bird/index.html",
