@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Flappy Bird Pro - Audio Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --sky: #70c5ce;
+            --border: #543847;
+        }
+
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            overflow: hidden; background-color: var(--sky);
+            font-family: 'Fredoka One', cursive; user-select: none;
+            touch-action: none;
+        }
+
+        #game-container {
+            position: relative; width: 100%; height: 100%;
+            display: flex; justify-content: center; align-items: center;
+        }
+
+        canvas { display: block; width: 100%; height: 100%; }
+
+        .ui-screen {
+            position: absolute; inset: 0;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            z-index: 50; pointer-events: none;
+        }
+
+        .hud-top {
+            position: absolute; top: 5%;
+            width: 100%; display: flex; flex-direction: column;
+            align-items: center; z-index: 40;
+        }
+
+        .hud-score {
+            font-size: 80px; color: white;
+            text-shadow: 4px 4px 0px var(--border);
+            line-height: 1;
+        }
+
+        .hud-level {
+            font-size: 24px; color: #f7d016;
+            text-shadow: 2px 2px 0px var(--border);
+            background: rgba(0,0,0,0.2);
+            padding: 4px 16px; border-radius: 20px;
+            margin-top: 5px;
+        }
+
+        .menu-panel {
+            background: #fff; padding: 30px;
+            border-radius: 24px; border: 5px solid var(--border);
+            box-shadow: 0 8px 0 var(--border);
+            pointer-events: auto; text-align: center;
+            min-width: 280px;
+        }
+
+        .btn-play {
+            background: #4caf50; color: white;
+            border: none; padding: 12px 40px;
+            font-size: 24px; border-radius: 12px;
+            box-shadow: 0 5px 0 #2e7d32; cursor: pointer;
+            margin-top: 20px; transition: 0.1s;
+        }
+
+        .btn-play:active {
+            transform: translateY(3px);
+            box-shadow: 0 2px 0 #2e7d32;
+        }
+
+        .hidden { display: none !important; }
+        
+        .level-up-toast {
+            position: absolute; top: 25%;
+            font-size: 40px; color: #fff;
+            text-shadow: 3px 3px 0px var(--border);
+            animation: toast-up 1.5s forwards;
+            pointer-events: none; z-index: 60;
+        }
+
+        @keyframes toast-up {
+            0% { transform: translateY(20px); opacity: 0; }
+            20% { transform: translateY(0px); opacity: 1; }
+            80% { transform: translateY(-20px); opacity: 1; }
+            100% { transform: translateY(-40px); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <div id="hud-top" class="hud-top hidden">
+        <div id="hud-score" class="hud-score">0</div>
+        <div id="hud-level" class="hud-level">Level 1</div>
+    </div>
+
+    <div id="start-screen" class="ui-screen">
+        <div class="menu-panel">
+            <h1 class="text-4xl text-[#f7d016] mb-4" style="-webkit-text-stroke: 2px var(--border)">FLAPPY PRO</h1>
+            <p class="text-[#543847] text-lg">Every 10 points = Level Up!</p>
+            <button class="btn-play" onclick="game.start()">START</button>
+        </div>
+    </div>
+
+    <div id="death-screen" class="ui-screen hidden">
+        <div class="menu-panel">
+            <h2 class="text-3xl text-red-500 mb-2">GAME OVER</h2>
+            <div class="py-2">
+                <p class="text-sm text-gray-500 uppercase">Reached</p>
+                <p id="final-level" class="text-xl text-[#f7d016]">Level 1</p>
+                <div class="h-1 bg-[#ded895] my-2 rounded"></div>
+                <p class="text-sm text-gray-500 uppercase">Best Score</p>
+                <p id="best-score" class="text-3xl text-[#543847]">0</p>
+            </div>
+            <button class="btn-play" onclick="game.start()">RETRY</button>
+        </div>
+    </div>
+
+    <canvas id="canvas"></canvas>
+</div>
+
+<script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const hudTop = document.getElementById('hud-top');
+    const hudScore = document.getElementById('hud-score');
+    const hudLevel = document.getElementById('hud-level');
+
+    // Web Audio Manager
+    class AudioManager {
+        constructor() {
+            this.ctx = null;
+        }
+
+        init() {
+            if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+
+        playJump() {
+            this.init();
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(250, this.ctx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(600, this.ctx.currentTime + 0.1);
+            gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.1);
+            osc.connect(gain); gain.connect(this.ctx.destination);
+            osc.start(); osc.stop(this.ctx.currentTime + 0.1);
+        }
+
+        playScore() {
+            this.init();
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(880, this.ctx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(1200, this.ctx.currentTime + 0.05);
+            gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.3);
+            osc.connect(gain); gain.connect(this.ctx.destination);
+            osc.start(); osc.stop(this.ctx.currentTime + 0.3);
+        }
+
+        playLevelUp() {
+            this.init();
+            [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(freq, this.ctx.currentTime + i * 0.1);
+                gain.gain.setValueAtTime(0.05, this.ctx.currentTime + i * 0.1);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + i * 0.1 + 0.2);
+                osc.connect(gain); gain.connect(this.ctx.destination);
+                osc.start(this.ctx.currentTime + i * 0.1);
+                osc.stop(this.ctx.currentTime + i * 0.1 + 0.2);
+            });
+        }
+
+        playDeath() {
+            this.init();
+            const osc = this.ctx.createOscillator();
+            const noise = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(200, this.ctx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(40, this.ctx.currentTime + 0.4);
+            gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+            gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.5);
+            osc.connect(gain); gain.connect(this.ctx.destination);
+            osc.start(); osc.stop(this.ctx.currentTime + 0.5);
+        }
+    }
+
+    const sfx = new AudioManager();
+
+    const baseConfig = {
+        gravity: 0.18,
+        jump: -4.2,
+        pipeWidth: 70,
+        pipeGap: 240,
+        speed: 2.5,
+        birdRadius: 12
+    };
+
+    class Game {
+        constructor() {
+            this.state = 'START';
+            this.score = 0;
+            this.level = 1;
+            this.highScore = localStorage.getItem('fb_pro_levels_best') || 0;
+            this.pipes = [];
+            this.buildings = [];
+            this.bird = { y: 0, v: 0, rot: 0, anim: 0 };
+            this.groundX = 0;
+            this.currentSpeed = baseConfig.speed;
+            this.currentGap = baseConfig.pipeGap;
+            
+            this.init();
+            this.loop();
+        }
+
+        init() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            this.bird.y = canvas.height / 2;
+            
+            this.buildings = Array.from({length: 8}, (_, i) => ({
+                x: i * (canvas.width / 4),
+                w: 100 + Math.random() * 80,
+                h: 150 + Math.random() * 120,
+                s: 0.5 
+            }));
+
+            window.addEventListener('resize', () => this.init());
+            
+            const handleAction = (e) => {
+                if(e.type === 'keydown' && e.code !== 'Space') return;
+                if(this.state === 'PLAYING') {
+                    this.bird.v = baseConfig.jump;
+                    sfx.playJump();
+                }
+            };
+            
+            window.addEventListener('pointerdown', handleAction);
+            window.addEventListener('keydown', handleAction);
+        }
+
+        start() {
+            this.state = 'PLAYING';
+            this.score = 0;
+            this.level = 1;
+            this.currentSpeed = baseConfig.speed;
+            this.currentGap = baseConfig.pipeGap;
+            this.pipes = [];
+            this.bird.y = canvas.height / 2;
+            this.bird.v = 0;
+            
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('death-screen').classList.add('hidden');
+            hudTop.classList.remove('hidden');
+            hudScore.innerText = "0";
+            hudLevel.innerText = "Level 1";
+            
+            this.spawnPipe();
+        }
+
+        spawnPipe() {
+            const minH = 150;
+            const maxH = canvas.height - this.currentGap - minH - 120;
+            const h = minH + Math.random() * (maxH - minH);
+            this.pipes.push({ x: canvas.width, h: h, scored: false });
+        }
+
+        levelUp() {
+            this.level++;
+            this.currentSpeed += 0.2;
+            this.currentGap = Math.max(160, this.currentGap - 10);
+            
+            hudLevel.innerText = `Level ${this.level}`;
+            sfx.playLevelUp();
+            
+            const toast = document.createElement('div');
+            toast.className = 'level-up-toast';
+            toast.innerText = 'LEVEL UP!';
+            document.getElementById('game-container').appendChild(toast);
+            setTimeout(() => toast.remove(), 1500);
+        }
+
+        die() {
+            if (this.state === 'GAMEOVER') return;
+            this.state = 'GAMEOVER';
+            sfx.playDeath();
+            
+            if (this.score > this.highScore) {
+                this.highScore = this.score;
+                localStorage.setItem('fb_pro_levels_best', this.highScore);
+            }
+
+            document.getElementById('final-level').innerText = `Reached Level ${this.level}`;
+            document.getElementById('best-score').innerText = this.highScore;
+            document.getElementById('death-screen').classList.remove('hidden');
+            hudTop.classList.add('hidden');
+        }
+
+        update() {
+            if (this.state !== 'PLAYING') return;
+
+            this.bird.v += baseConfig.gravity;
+            this.bird.y += this.bird.v;
+            this.bird.rot = Math.min(Math.PI/4, Math.max(-Math.PI/6, this.bird.v * 0.1));
+            this.bird.anim += 0.15;
+
+            if (this.bird.y + baseConfig.birdRadius > canvas.height - 100 || this.bird.y < 0) {
+                this.die();
+            }
+
+            this.pipes.forEach(p => {
+                p.x -= this.currentSpeed;
+                
+                const bx = canvas.width * 0.3;
+                const margin = 6; 
+                if (bx + baseConfig.birdRadius - margin > p.x && bx - baseConfig.birdRadius + margin < p.x + baseConfig.pipeWidth) {
+                    if (this.bird.y - baseConfig.birdRadius + margin < p.h || this.bird.y + baseConfig.birdRadius - margin > p.h + this.currentGap) {
+                        this.die();
+                    }
+                }
+
+                if (!p.scored && p.x + baseConfig.pipeWidth < bx) {
+                    p.scored = true;
+                    this.score++;
+                    hudScore.innerText = this.score;
+                    sfx.playScore();
+                    
+                    if (this.score % 10 === 0) {
+                        this.levelUp();
+                    }
+                }
+            });
+
+            this.pipes = this.pipes.filter(p => p.x > -100);
+            if (this.pipes.length && this.pipes[this.pipes.length-1].x < canvas.width - (280 + (this.level * 10))) {
+                this.spawnPipe();
+            }
+
+            this.groundX = (this.groundX + this.currentSpeed) % 24;
+            this.buildings.forEach(b => {
+                b.x -= b.s;
+                if (b.x + b.w < 0) b.x = canvas.width;
+            });
+        }
+
+        draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Sky
+            const skyGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            skyGrad.addColorStop(0, '#70c5ce');
+            skyGrad.addColorStop(1, '#90d5de');
+            ctx.fillStyle = skyGrad;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Buildings
+            ctx.fillStyle = '#6ab8c2';
+            this.buildings.forEach(b => {
+                ctx.fillRect(b.x, canvas.height - 100 - b.h, b.w, b.h);
+                ctx.fillStyle = '#7bc7d1'; 
+                for(let j=10; j < b.h - 10; j += 25) {
+                    for(let i=10; i < b.w - 10; i += 20) {
+                        ctx.fillRect(b.x + i, canvas.height - 100 - b.h + j, 8, 12);
+                    }
+                }
+                ctx.fillStyle = '#6ab8c2';
+            });
+
+            // Pipes
+            this.pipes.forEach(p => {
+                ctx.fillStyle = '#73bf2e';
+                ctx.strokeStyle = '#543847';
+                ctx.lineWidth = 4;
+                
+                ctx.fillRect(p.x, 0, baseConfig.pipeWidth, p.h);
+                ctx.strokeRect(p.x, -5, baseConfig.pipeWidth, p.h + 5);
+                ctx.fillRect(p.x - 5, p.h - 25, baseConfig.pipeWidth + 10, 25);
+                ctx.strokeRect(p.x - 5, p.h - 25, baseConfig.pipeWidth + 10, 25);
+
+                const by = p.h + this.currentGap;
+                const bh = canvas.height - by - 100;
+                ctx.fillRect(p.x, by, baseConfig.pipeWidth, bh);
+                ctx.strokeRect(p.x, by, baseConfig.pipeWidth, bh + 5);
+                ctx.fillRect(p.x - 5, by, baseConfig.pipeWidth + 10, 25);
+                ctx.strokeRect(p.x - 5, by, baseConfig.pipeWidth + 10, 25);
+            });
+
+            // Bird
+            ctx.save();
+            ctx.translate(canvas.width * 0.3, this.bird.y);
+            ctx.rotate(this.bird.rot);
+            const flap = Math.sin(this.bird.anim) * 6;
+            
+            ctx.fillStyle = '#f7d016';
+            ctx.strokeStyle = '#543847';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.ellipse(0, 0, 19, 15, 0, 0, Math.PI*2);
+            ctx.fill(); ctx.stroke();
+            
+            ctx.fillStyle = '#fff';
+            ctx.beginPath();
+            ctx.ellipse(-6, 2, 10, 6 + flap, 0, 0, Math.PI*2);
+            ctx.fill(); ctx.stroke();
+            
+            ctx.fillStyle = '#fff';
+            ctx.beginPath(); ctx.arc(8, -5, 6, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+            ctx.fillStyle = '#000';
+            ctx.beginPath(); ctx.arc(10, -5, 2.5, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = '#f75b16';
+            ctx.beginPath();
+            ctx.moveTo(14, 0); ctx.lineTo(26, 4); ctx.lineTo(14, 8);
+            ctx.closePath(); ctx.fill(); ctx.stroke();
+            ctx.restore();
+
+            // Ground
+            ctx.fillStyle = '#ded895';
+            ctx.fillRect(0, canvas.height - 100, canvas.width, 100);
+            ctx.fillStyle = '#73bf2e';
+            ctx.fillRect(0, canvas.height - 100, canvas.width, 18);
+            ctx.strokeStyle = '#543847';
+            ctx.lineWidth = 4;
+            ctx.strokeRect(-2, canvas.height - 100, canvas.width + 4, 100);
+            
+            ctx.strokeStyle = 'rgba(84, 56, 71, 0.4)';
+            for(let i = -20; i < canvas.width + 40; i += 24) {
+                ctx.beginPath();
+                ctx.moveTo(i - this.groundX, canvas.height - 82);
+                ctx.lineTo(i - 15 - this.groundX, canvas.height);
+                ctx.stroke();
+            }
+        }
+
+        loop() {
+            this.update();
+            this.draw();
+            requestAnimationFrame(() => this.loop());
+        }
+    }
+
+    const game = new Game();
+</script>
+</body>
+</html>
+
+
