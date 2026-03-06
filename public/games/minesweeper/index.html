@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Minesweeper Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            background-color: #578a34; 
+            font-family: 'Roboto', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        #game-wrapper {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            width: 100%;
+            position: relative;
+        }
+
+        .header-ui {
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #4a752c;
+            color: white;
+            z-index: 10;
+        }
+
+        .stats-row {
+            display: flex;
+            gap: 12px;
+            margin-top: 4px;
+        }
+
+        .stat-pill {
+            background: rgba(0, 0, 0, 0.15);
+            padding: 4px 12px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .level-dropdown {
+            background: white;
+            color: #4a752c;
+            border-radius: 8px;
+            padding: 6px 16px;
+            font-weight: 800;
+            border: none;
+            outline: none;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        #board-container {
+            flex-grow: 1;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #game-canvas {
+            display: block;
+            touch-action: none;
+            image-rendering: auto;
+        }
+
+        .footer-ui {
+            height: 100px;
+            background-color: #4a752c;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            z-index: 10;
+        }
+
+        .control-btn {
+            width: 60px;
+            height: 60px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            cursor: pointer;
+            transition: transform 0.1s;
+            box-shadow: 0 4px 0px rgba(0,0,0,0.2);
+            border: 2px solid #ccc;
+        }
+
+        .control-btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0px rgba(0,0,0,0.2);
+        }
+
+        .control-btn.active {
+            background: #e2e8f0;
+            border-color: #4a752c;
+            transform: scale(1.1);
+        }
+
+        /* Message Overlays */
+        #overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.4);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            backdrop-filter: blur(4px);
+        }
+
+        .message-card {
+            background: #4a752c;
+            padding: 30px;
+            border-radius: 24px;
+            text-align: center;
+            color: white;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+            border: 4px solid #aad751;
+            transform: scale(0.8);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .message-card.show {
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        .result-icon {
+            font-size: 60px;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .play-again-btn {
+            margin-top: 20px;
+            background: #aad751;
+            color: #4a752c;
+            padding: 10px 24px;
+            border-radius: 12px;
+            font-weight: 900;
+            text-transform: uppercase;
+            cursor: pointer;
+            border: none;
+            transition: background 0.2s;
+        }
+
+        .play-again-btn:hover {
+            background: #a2d149;
+        }
+
+        .shake {
+            animation: shake-anim 0.4s ease-in-out;
+        }
+
+        @keyframes shake-anim {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-8px); }
+            50% { transform: translateX(8px); }
+            75% { transform: translateX(-8px); }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-wrapper">
+        <div class="header-ui">
+            <div>
+                <h1 class="text-lg font-bold">Minesweeper</h1>
+                <div class="stats-row">
+                    <div class="stat-pill">
+                        <span class="text-white/70">🕒</span>
+                        <span id="timer">000</span>
+                    </div>
+                    <div class="stat-pill">
+                        <span class="text-red-500">🚩</span>
+                        <span id="mine-count">99</span>
+                    </div>
+                </div>
+            </div>
+            <select id="level-select" class="level-dropdown" onchange="initGame(this.value)">
+                <option value="easy">Easy</option>
+                <option value="medium">Medium</option>
+                <option value="hard" selected>Hard</option>
+            </select>
+        </div>
+
+        <div id="board-container">
+            <canvas id="game-canvas"></canvas>
+        </div>
+
+        <div class="footer-ui">
+            <div id="mode-reveal" class="control-btn active" title="Dig Mode">⛏️</div>
+            <div id="mode-flag" class="control-btn" title="Flag Mode">🚩</div>
+            <div id="reset-btn" class="control-btn" title="Restart">🔄</div>
+        </div>
+
+        <!-- Win/Defeat Overlay -->
+        <div id="overlay">
+            <div id="message-card" class="message-card">
+                <span id="res-icon" class="result-icon">😎</span>
+                <h2 id="res-title" class="text-2xl font-black mb-1 uppercase">Winner!</h2>
+                <p id="res-stats" class="text-white/80 font-bold mb-4">Time: 0s</p>
+                <button class="play-again-btn" onclick="hideOverlay(); initGame(state.level);">Play Again</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('game-canvas');
+        const ctx = canvas.getContext('2d');
+        const boardContainer = document.getElementById('board-container');
+        const overlay = document.getElementById('overlay');
+        const card = document.getElementById('message-card');
+        
+        const COLORS = {
+            grassLight: '#aad751',
+            grassDark: '#a2d149',
+            dirtLight: '#e5c29f',
+            dirtDark: '#d7b899',
+            nums: [null, '#1976d2', '#388e3c', '#d32f2f', '#7b1fa2', '#ff8f00', '#0097a7', '#424242', '#1565c0']
+        };
+
+        const LEVELS = {
+            easy: { r: 10, c: 8, m: 10 },
+            medium: { r: 18, c: 14, m: 40 },
+            hard: { r: 24, c: 18, m: 99 }
+        };
+
+        let state = {
+            level: 'hard',
+            grid: [],
+            gameOver: false,
+            won: false,
+            firstClick: true,
+            flags: 0,
+            timer: 0,
+            interval: null,
+            mode: 'reveal',
+            tileW: 0,
+            tileH: 0
+        };
+
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playSfx(freq, type='sine', dur=0.1, vol=0.05) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const o = audioCtx.createOscillator();
+            const g = audioCtx.createGain();
+            o.type = type;
+            o.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            g.gain.setValueAtTime(vol, audioCtx.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + dur);
+            o.connect(g); g.connect(audioCtx.destination);
+            o.start(); o.stop(audioCtx.currentTime + dur);
+        }
+
+        function initGame(lvlKey) {
+            state.level = lvlKey;
+            const lvl = LEVELS[lvlKey];
+            state.grid = [];
+            state.gameOver = false;
+            state.won = false;
+            state.firstClick = true;
+            state.flags = 0;
+            state.timer = 0;
+            
+            clearInterval(state.interval);
+            document.getElementById('timer').innerText = "000";
+            document.getElementById('mine-count').innerText = lvl.m.toString().padStart(2, '0');
+            hideOverlay();
+
+            for (let r = 0; r < lvl.r; r++) {
+                state.grid[r] = [];
+                for (let c = 0; c < lvl.c; c++) {
+                    state.grid[r][c] = { mine: false, revealed: false, flagged: false, count: 0, scale: 0 };
+                }
+            }
+            resize();
+        }
+
+        function resize() {
+            canvas.width = boardContainer.clientWidth;
+            canvas.height = boardContainer.clientHeight;
+            const lvl = LEVELS[state.level];
+            state.tileW = canvas.width / lvl.c;
+            state.tileH = canvas.height / lvl.r;
+            render();
+        }
+
+        function render() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const lvl = LEVELS[state.level];
+
+            for (let r = 0; r < lvl.r; r++) {
+                for (let c = 0; c < lvl.c; c++) {
+                    const cell = state.grid[r][c];
+                    const isEven = (r + c) % 2 === 0;
+
+                    if (!cell.revealed) {
+                        ctx.fillStyle = isEven ? COLORS.grassLight : COLORS.grassDark;
+                    } else {
+                        ctx.fillStyle = isEven ? COLORS.dirtLight : COLORS.dirtDark;
+                    }
+
+                    ctx.fillRect(c * state.tileW, r * state.tileH, state.tileW + 0.5, state.tileH + 0.5);
+
+                    if (cell.revealed) {
+                        if (cell.mine) {
+                            ctx.font = `${Math.min(state.tileW, state.tileH) * 0.6}px Arial`;
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'middle';
+                            ctx.fillText('💣', c * state.tileW + state.tileW/2, r * state.tileH + state.tileH/2);
+                        } else if (cell.count > 0) {
+                            ctx.fillStyle = COLORS.nums[cell.count];
+                            ctx.font = `bold ${Math.min(state.tileW, state.tileH) * 0.7}px Arial`;
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'middle';
+                            ctx.fillText(cell.count, c * state.tileW + state.tileW/2, r * state.tileH + state.tileH/2);
+                        }
+                    } else if (cell.flagged) {
+                        ctx.font = `${Math.min(state.tileW, state.tileH) * 0.6}px Arial`;
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText('🚩', c * state.tileW + state.tileW/2, r * state.tileH + state.tileH/2);
+                    }
+                }
+            }
+        }
+
+        function setupMines(startR, startC) {
+            const lvl = LEVELS[state.level];
+            let placed = 0;
+            while (placed < lvl.m) {
+                let r = Math.floor(Math.random() * lvl.r);
+                let c = Math.floor(Math.random() * lvl.c);
+                if (!state.grid[r][c].mine && (Math.abs(r - startR) > 1 || Math.abs(c - startC) > 1)) {
+                    state.grid[r][c].mine = true;
+                    placed++;
+                }
+            }
+            for (let r = 0; r < lvl.r; r++) {
+                for (let c = 0; c < lvl.c; c++) {
+                    if (!state.grid[r][c].mine) {
+                        state.grid[r][c].count = getNeighbors(r, c).filter(n => n.mine).length;
+                    }
+                }
+            }
+        }
+
+        function getNeighbors(r, c) {
+            const lvl = LEVELS[state.level];
+            const ns = [];
+            for (let dr = -1; dr <= 1; dr++) {
+                for (let dc = -1; dc <= 1; dc++) {
+                    if (dr === 0 && dc === 0) continue;
+                    let nr = r + dr, nc = c + dc;
+                    if (nr >= 0 && nr < lvl.r && nc >= 0 && nc < lvl.c) ns.push({ ...state.grid[nr][nc], r: nr, c: nc });
+                }
+            }
+            return ns;
+        }
+
+        function reveal(r, c) {
+            if (state.gameOver || state.grid[r][c].revealed || state.grid[r][c].flagged) return;
+            
+            if (state.firstClick) {
+                state.firstClick = false;
+                setupMines(r, c);
+                state.interval = setInterval(() => {
+                    state.timer++;
+                    document.getElementById('timer').innerText = state.timer.toString().padStart(3, '0');
+                }, 1000);
+            }
+
+            const cell = state.grid[r][c];
+            cell.revealed = true;
+
+            if (cell.mine) {
+                state.gameOver = true;
+                playSfx(100, 'sawtooth', 0.6, 0.2);
+                boardContainer.classList.add('shake');
+                state.grid.flat().forEach(cl => { if (cl.mine) cl.revealed = true; });
+                render();
+                showOverlay(false);
+            } else {
+                playSfx(400 + (r+c)*2, 'sine', 0.05);
+                if (cell.count === 0) {
+                    getNeighbors(r, c).forEach(n => reveal(n.r, n.c));
+                }
+                render();
+                checkWin();
+            }
+        }
+
+        function toggleFlag(r, c) {
+            if (state.gameOver || state.grid[r][c].revealed) return;
+            const lvl = LEVELS[state.level];
+            const cell = state.grid[r][c];
+
+            if (!cell.flagged && state.flags >= lvl.m) {
+                playSfx(150, 'square', 0.05);
+                return;
+            }
+
+            cell.flagged = !cell.flagged;
+            state.flags += cell.flagged ? 1 : -1;
+            document.getElementById('mine-count').innerText = Math.max(0, lvl.m - state.flags).toString().padStart(2, '0');
+            playSfx(600, 'triangle', 0.1);
+            render();
+        }
+
+        function checkWin() {
+            const lvl = LEVELS[state.level];
+            const revealed = state.grid.flat().filter(cl => cl.revealed).length;
+            if (revealed === (lvl.r * lvl.c) - lvl.m) {
+                state.gameOver = true;
+                state.won = true;
+                clearInterval(state.interval);
+                playSfx(800, 'sine', 0.5);
+                showOverlay(true);
+            }
+        }
+
+        function showOverlay(won) {
+            overlay.style.display = 'flex';
+            document.getElementById('res-icon').innerText = won ? '😎' : '😵';
+            document.getElementById('res-title').innerText = won ? 'Winner!' : 'Defeat!';
+            document.getElementById('res-stats').innerText = `Time: ${state.timer} seconds`;
+            setTimeout(() => card.classList.add('show'), 100);
+        }
+
+        function hideOverlay() {
+            card.classList.remove('show');
+            overlay.style.display = 'none';
+            boardContainer.classList.remove('shake');
+        }
+
+        canvas.addEventListener('pointerdown', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const r = Math.floor((e.clientY - rect.top) / state.tileH);
+            const c = Math.floor((e.clientX - rect.left) / state.tileW);
+            if (r >= 0 && r < LEVELS[state.level].r && c >= 0 && c < LEVELS[state.level].c) {
+                if (state.mode === 'reveal') reveal(r, c);
+                else toggleFlag(r, c);
+            }
+        });
+
+        document.getElementById('mode-reveal').onclick = () => {
+            state.mode = 'reveal';
+            document.getElementById('mode-reveal').classList.add('active');
+            document.getElementById('mode-flag').classList.remove('active');
+        };
+
+        document.getElementById('mode-flag').onclick = () => {
+            state.mode = 'flag';
+            document.getElementById('mode-flag').classList.add('active');
+            document.getElementById('mode-reveal').classList.remove('active');
+        };
+
+        document.getElementById('reset-btn').onclick = () => initGame(state.level);
+
+        window.addEventListener('resize', resize);
+        initGame('hard');
+    </script>
+</body>
+</html>
+
+
