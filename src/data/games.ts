@@ -18,15 +18,6 @@ export interface Game {
 
 export const games: Game[] = [
   {
-    id: "space-shooter",
-    title: "Space Shooter",
-    category: "Action",
-    thumbnail: "/games/space-shooter/thumb.png",
-    description: "Blast through waves of alien invaders in this classic space shooter. Collect power-ups and survive as long as you can!",
-    howToPlay: "Use arrow keys or WASD to move your ship. Press Space to shoot. Collect power-ups for special abilities.",
-    gameFile: "/games/space-shooter/index.html",
-  },
-  {
     id: "orbit-rush",
     title: "Orbit Rush",
     category: "Puzzle",
@@ -70,24 +61,6 @@ export const games: Game[] = [
     description: "Solve math challenges and test your math skills!",
     howToPlay: "Type your answer before time runs out to keep your streak.",
     gameFile: "/games/number-guesser/index.html",
-  },
-  {
-    id: "snake",
-    title: "Snake",
-    category: "Action",
-    thumbnail: "/games/snake/thumb.png",
-    description: "Guide the snake to eat food and grow longer without hitting the walls or yourself. A timeless classic!",
-    howToPlay: "Use arrow keys or swipe to change direction. Eat the red food to grow. Don't crash into walls or your own tail!",
-    gameFile: "/games/snake/index.html",
-  },
-  {
-    id: "breakout",
-    title: "Breakout",
-    category: "Action",
-    thumbnail: "/games/breakout/thumb.png",
-    description: "Smash colorful bricks with a bouncing ball in this classic arcade game. Don't let the ball fall!",
-    howToPlay: "Move mouse or touch to control the paddle. Bounce the ball to break all the bricks. You have 3 lives.",
-    gameFile: "/games/breakout/index.html",
   },
   {
     id: "minesweeper",
