@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Minesweeper</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #1a1a2e; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; font-family: 'Segoe UI', sans-serif; color: #fff; }
+h1 { color: #0ff; margin-bottom: 10px; font-size: 24px; }
+.controls { margin-bottom: 10px; }
+.controls button { padding: 6px 16px; border: none; border-radius: 4px; background: #e94560; color: #fff; cursor: pointer; font-size: 14px; }
+.grid { display: inline-grid; gap: 2px; }
+.cell { width: 32px; height: 32px; background: #2a2a5a; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; cursor: pointer; user-select: none; transition: background 0.1s; }
+.cell:hover { background: #3a3a7a; }
+.cell.revealed { background: #16213e; cursor: default; }
+.cell.mine { background: #e94560; }
+.cell.flagged::after { content: '🚩'; }
+.info { margin-top: 10px; color: #888; font-size: 13px; }
+</style>
+</head>
+<body>
+<h1>💣 Minesweeper</h1>
+<div class="controls"><button onclick="init()">New Game</button> <span id="status"></span></div>
+<div class="grid" id="grid"></div>
+<div class="info">Click to reveal · Right-click / long-press to flag</div>
+<script>
+const ROWS = 10, COLS = 10, MINES = 15;
+let grid, revealed, flagged, gameOver;
+const colors = ['','#0ff','#51cf66','#e94560','#7b2ff7','#f7d354','#00b4d8','#fff','#888'];
+
+function init() {
+  gameOver = false; document.getElementById('status').textContent = '';
+  grid = Array.from({length: ROWS}, () => Array(COLS).fill(0));
+  revealed = Array.from({length: ROWS}, () => Array(COLS).fill(false));
+  flagged = Array.from({length: ROWS}, () => Array(COLS).fill(false));
+  let placed = 0;
+  while (placed < MINES) { const r = Math.floor(Math.random()*ROWS), c = Math.floor(Math.random()*COLS); if (grid[r][c] !== -1) { grid[r][c] = -1; placed++; } }
+  for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) if (grid[r][c] !== -1) {
+    let count = 0;
+    for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) { const nr = r+dr, nc = c+dc; if (nr>=0&&nr<ROWS&&nc>=0&&nc<COLS&&grid[nr][nc]===-1) count++; }
+    grid[r][c] = count;
+  }
+  render();
+}
+
+function reveal(r, c) {
+  if (r<0||r>=ROWS||c<0||c>=COLS||revealed[r][c]||flagged[r][c]) return;
+  revealed[r][c] = true;
+  if (grid[r][c] === 0) for (let dr=-1;dr<=1;dr++) for (let dc=-1;dc<=1;dc++) reveal(r+dr,c+dc);
+}
+
+function checkWin() {
+  for (let r=0;r<ROWS;r++) for (let c=0;c<COLS;c++) if (grid[r][c]!==-1 && !revealed[r][c]) return false;
+  return true;
+}
+
+function handleClick(r, c) {
+  if (gameOver || flagged[r][c]) return;
+  if (grid[r][c] === -1) { gameOver = true; revealed[r][c] = true; document.getElementById('status').textContent = '💥 Game Over!'; for (let i=0;i<ROWS;i++) for(let j=0;j<COLS;j++) if(grid[i][j]===-1) revealed[i][j]=true; }
+  else { reveal(r, c); if (checkWin()) { gameOver = true; document.getElementById('status').textContent = '🎉 You Win!'; } }
+  render();
+}
+
+function handleFlag(r, c, e) { e.preventDefault(); if (gameOver || revealed[r][c]) return; flagged[r][c] = !flagged[r][c]; render(); }
+
+function render() {
+  const el = document.getElementById('grid');
+  el.style.gridTemplateColumns = `repeat(${COLS}, 32px)`;
+  el.innerHTML = '';
+  for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) {
+    const cell = document.createElement('div'); cell.className = 'cell';
+    if (revealed[r][c]) { cell.classList.add('revealed'); if (grid[r][c]===-1) { cell.classList.add('mine'); cell.textContent='💣'; } else if (grid[r][c]>0) { cell.textContent=grid[r][c]; cell.style.color=colors[grid[r][c]]; } }
+    else if (flagged[r][c]) cell.classList.add('flagged');
+    cell.addEventListener('click', () => handleClick(r,c));
+    cell.addEventListener('contextmenu', (e) => handleFlag(r,c,e));
+    let pressTimer; cell.addEventListener('touchstart', () => { pressTimer = setTimeout(() => handleFlag(r,c,{preventDefault:()=>{}}), 500); });
+    cell.addEventListener('touchend', () => clearTimeout(pressTimer));
+    el.appendChild(cell);
+  }
+}
+init();
+</script>
+</body>
+</html>
