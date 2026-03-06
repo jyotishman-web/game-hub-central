@@ -93,7 +93,7 @@ export const games: Game[] = [
     id: "minesweeper",
     title: "Minesweeper",
     category: "Puzzle",
-    thumbnail: "/games/minesweeper/thumb.png",
+    thumbnail: "/games/minesweeper/e.png",
     description: "Clear the minefield without detonating any bombs. Use logic and deduction to reveal safe cells.",
     howToPlay: "Click to reveal a cell. Right-click or long-press to flag a mine. Numbers show how many mines are adjacent.",
     gameFile: "/games/minesweeper/index.html",
