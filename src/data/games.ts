@@ -48,7 +48,7 @@ export const games: Game[] = [
     id: "Othello",
     title: "Othello",
     category: "Strategy",
-    thumbnail: "/games/hextris/A.png",
+    thumbnail: "/games/hextris/1.png",
     description: "Classic board game of strategy. Place discs to outflank and capture your opponent's pieces.",
     howToPlay: "Click to place your disc. Outflank opponent pieces in any direction to flip them to your color. The player with the most discs wins.",
     gameFile: "/games/Othello/index.html",
