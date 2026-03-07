@@ -887,14 +887,11 @@ document.addEventListener("DOMContentLoaded", function(){
    if(restartBtn){
       restartBtn.addEventListener("click", function(){
 
-         if(typeof sdk !== "undefined"){
-            sdk.showBanner(); // show advertisement
-         }
-
-         // restart game logic
-            restartGame();
-      });
+   if(typeof sdk !== "undefined"){
+      sdk.showBanner();
    }
+
+   restartGame();
 
 });
 </script>
