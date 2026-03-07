@@ -4,6 +4,7 @@ import CategoryFilter from "@/components/CategoryFilter";
 import SearchBar from "@/components/SearchBar";
 import GameCard from "@/components/GameCard";
 import GameModal from "@/components/GameModal";
+import Footer from "@/components/Footer";
 import { games, categories, type Game } from "@/data/games";
 
 const Index = () => {
@@ -61,6 +62,7 @@ const Index = () => {
         )}
       </div>
 
+      <Footer />
       <GameModal game={selectedGame} onClose={() => setSelectedGame(null)} />
     </div>
   );
