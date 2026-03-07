@@ -1,6 +1,36 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script>
+window.SDK_OPTIONS = {
+   gameId: "2slq5anbwwq6rs6is7zw2xqf2jnuq5wh",
+   onEvent: function (event) {
+
+      switch (event.name) {
+
+         case "SDK_GAME_PAUSE":
+            pauseGame();
+            break;
+
+         case "SDK_GAME_START":
+            resumeGame();
+            break;
+
+      }
+
+   }
+};
+
+(function (a, b, c) {
+   var d = a.getElementsByTagName(b)[0];
+   if (!a.getElementById(c)) {
+      var s = a.createElement(b);
+      s.id = c;
+      s.src = "https://api.gamemonetize.com/sdk.js";
+      d.parentNode.insertBefore(s, d);
+   }
+})(document, "script", "gamemonetize-sdk");
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>ORBIT RUSH: EVOLVE</title>
