@@ -810,6 +810,68 @@ function unlockBonus() {
     alert("Bonus Unlocked! 🎁"); // Replace with your bonus system
 }
     </script>
+    <!-- GameMonetize SDK START -->
+<script>
+window.SDK_OPTIONS = {
+   gameId: "2slq5anbwwq6rs6is7zw2xqf2jnuq5wh", // your game ID
+   onEvent: function (a) {
+      switch (a.name) {
+         case "SDK_GAME_PAUSE":
+            console.log("Game Paused for Ad");
+            break;
+
+         case "SDK_GAME_START":
+            console.log("Ad Finished - Resume Game");
+            break;
+
+         case "SDK_READY":
+            console.log("GameMonetize SDK Ready");
+            break;
+
+         case "SDK_ERROR":
+            console.log("SDK Error");
+            break;
+      }
+   }
+};
+
+(function (a, b, c) {
+   var d = a.getElementsByTagName(b)[0];
+   if (!a.getElementById(c)) {
+      var e = a.createElement(b);
+      e.id = c;
+      e.src = "https://api.gamemonetize.com/sdk.js";
+      d.parentNode.insertBefore(e, d);
+   }
+})(document, "script", "gamemonetize-sdk");
+</script>
+<!-- GameMonetize SDK END -->
+
+
+<!-- TRY AGAIN BUTTON AD -->
+<script>
+document.addEventListener("DOMContentLoaded", function(){
+
+   const restartBtn = document.getElementById("restart-btn");
+
+   if(restartBtn){
+      restartBtn.addEventListener("click", function(){
+
+         if(typeof sdk !== "undefined"){
+            sdk.showBanner(); // show advertisement
+         }
+
+         // restart game logic
+         if(typeof restartGame === "function"){
+            restartGame();
+         }
+
+      });
+   }
+
+});
+</script>
+    
 </body>
 </html>
 
