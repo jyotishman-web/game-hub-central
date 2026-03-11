@@ -62,7 +62,6 @@ const Index = () => {
       </div>
 
       <Footer />
-      <GameModal game={selectedGame} onClose={() => setSelectedGame(null)} />
     </div>
   );
 };

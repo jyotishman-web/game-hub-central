@@ -48,7 +48,8 @@ const GameCard = ({ game, index }: GameCardProps) => (
         {game.description}
       </p>
     </div>
-  </motion.button>
+    </motion.div>
+  </Link>
 );
 
 export default GameCard;
