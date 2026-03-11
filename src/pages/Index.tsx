@@ -24,6 +24,11 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title="Game Garage — Play Free HTML5 Games Online"
+        description="Play free HTML5 games instantly — no downloads, no installs. Puzzle, action, strategy and casual games."
+        canonical="https://gamegaragex.netlify.app/"
+      />
       <Hero />
 
       <div className="container py-8 space-y-6">
