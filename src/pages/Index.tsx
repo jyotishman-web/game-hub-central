@@ -50,12 +50,7 @@ const Index = () => {
         {/* Game Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
           {filtered.map((game, i) => (
-            <GameCard
-              key={game.id}
-              game={game}
-              index={i}
-              onClick={() => setSelectedGame(game)}
-            />
+            <GameCard key={game.id} game={game} index={i} />
           ))}
         </div>
 
