@@ -9,10 +9,9 @@ interface GameCardProps {
 
 const GameCard = ({ game, index, onClick }: GameCardProps) => (
   <motion.button
-    initial={{ opacity: 0, y: 30 }}
-    whileInView={{ opacity: 1, y: 0 }}
-    viewport={{ once: true, margin: "-50px" }}
-    transition={{ duration: 0.4, delay: index * 0.05 }}
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.3, delay: Math.min(index * 0.03, 0.2) }}
     whileHover={{ scale: 1.03 }}
     whileTap={{ scale: 0.98 }}
     onClick={onClick}
@@ -27,7 +26,8 @@ const GameCard = ({ game, index, onClick }: GameCardProps) => (
       <img
         src={game.thumbnail}
         alt={game.title}
-        loading="lazy"
+        loading="eager"
+        decoding="async"
         className="relative z-10 w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
         onError={(e) => {
           (e.target as HTMLImageElement).style.display = "none";
