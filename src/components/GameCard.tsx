@@ -1,22 +1,23 @@
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 import type { Game } from "@/data/games";
 
 interface GameCardProps {
   game: Game;
   index: number;
-  onClick: () => void;
+  onClick?: () => void;
 }
 
-const GameCard = ({ game, index, onClick }: GameCardProps) => (
-  <motion.button
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.3, delay: Math.min(index * 0.03, 0.2) }}
-    whileHover={{ scale: 1.03 }}
-    whileTap={{ scale: 0.98 }}
-    onClick={onClick}
-    className="group text-left bg-card rounded-lg border border-border overflow-hidden transition-shadow duration-300 card-glow focus:outline-none focus:ring-2 focus:ring-primary/50"
-  >
+const GameCard = ({ game, index }: GameCardProps) => (
+  <Link to={`/games/${game.id}`} className="block">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, delay: Math.min(index * 0.03, 0.2) }}
+      whileHover={{ scale: 1.03 }}
+      whileTap={{ scale: 0.98 }}
+      className="group text-left bg-card rounded-lg border border-border overflow-hidden transition-shadow duration-300 card-glow focus:outline-none focus:ring-2 focus:ring-primary/50"
+    >
     <div className="aspect-video bg-muted relative overflow-hidden">
       <div className="absolute inset-0 flex items-center justify-center bg-muted">
         <span className="text-3xl font-bold font-display text-muted-foreground/30">
