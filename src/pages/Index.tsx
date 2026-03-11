@@ -3,14 +3,13 @@ import Hero from "@/components/Hero";
 import CategoryFilter from "@/components/CategoryFilter";
 import SearchBar from "@/components/SearchBar";
 import GameCard from "@/components/GameCard";
-import GameModal from "@/components/GameModal";
+import SEOHead from "@/components/SEOHead";
 import Footer from "@/components/Footer";
-import { games, categories, type Game } from "@/data/games";
+import { games, categories } from "@/data/games";
 
 const Index = () => {
   const [activeCategory, setActiveCategory] = useState("All");
   const [search, setSearch] = useState("");
-  const [selectedGame, setSelectedGame] = useState<Game | null>(null);
 
   const filtered = useMemo(() => {
     return games.filter((g) => {
